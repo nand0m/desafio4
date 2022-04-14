@@ -9,6 +9,9 @@ app.use(express.urlencoded({extended : true}));
 
 app.use('/api', router);
 
+app.use(express.static('public'));
+
+
 const server = app.listen(8080, () => {
     console.log('La aplicacion express esta escuchando en el puerto 8080')
 })
@@ -83,7 +86,7 @@ router.put('/productos/:id', (req, resp) => {
 router.delete('/productos/:id', (req, resp) => {
  
     resp.json({
-        result: 'edit by id',
+        result: 'delete by id',
         id: req.params.id
     });
 })
