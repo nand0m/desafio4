@@ -26,7 +26,8 @@ app.get('/', function (req, res) {
 // GET Devuelve todos los productos
 
 router.get('/productos', (req, resp) => {
-    resp.json(productos.getAll());
+    let disponibles = productos.getAll()
+    resp.json(disponibles);
 })
 
 
@@ -35,25 +36,24 @@ router.get('/productos', (req, resp) => {
 
 // GET Devuelve por ID
 
-/*
-router.get('/productos/:id', (req, resp) => {
-    let identificador = req.params.id;
-    resp.json(productos.getById(identificador));
-})
-*/
 
 router.get('/productos/:id', (req, resp) => {
-    let seleccion = productos.getById(req.params.id)
-    resp.json({
-        result: 'get by id',
-        producto: seleccion,
-        id: req.params.id, 
-        error: 'producto no encontrado'
-    });
+    let seleccion = productos.getById(parseInt(req.params.id))
+
+    if (seleccion != 0) {
+        resp.json({
+            result: 'get by id',
+            producto: seleccion,
+            id: req.params.id, 
+        });
+    } else {       
+        resp.json({
+            error: 'producto no encontrado',
+        });
+        // resp.status(404).send('Producto no encontrado');
+
+    }
 })
-
-
-
 
 
 
@@ -61,10 +61,13 @@ router.get('/productos/:id', (req, resp) => {
 
 // POST Recibe y agrega un prod y lo devuelve con su ID asignado.
 router.post('/productos', (req, resp) => {
+    new_index = productos.save(req.body) - 1;
+    let disponibles = productos.getAll();
+    let ultimo = disponibles[new_index];
+
 
     resp.json({
-        result: 'Save product',
-        body: req.body
+        agregado: ultimo,
     });
 })
 
@@ -72,21 +75,21 @@ router.post('/productos', (req, resp) => {
 
 // PUT Recibe y actualiza un prod segun su id.
 router.put('/productos/:id', (req, resp) => {
- 
+    productos.updateById(req.body);
     resp.json({
-        result: 'edit by id',
-        id: req.params.id, 
-        body: req.body
+        control: req.body
     });
 })
 
 
 
+
 // DELETE Eminima un producto segun su id.
 router.delete('/productos/:id', (req, resp) => {
+    productos.deleteById(parseInt(req.params.id))
  
     resp.json({
-        result: 'delete by id',
+        result: 'Delete by id',
         id: req.params.id
     });
 })
@@ -134,7 +137,7 @@ class Contenedor {
         let sel = temp.filter(elegido => {
             return elegido.id === prod_id;
         })
-        return sel;
+        return sel
     }
 
     getAll() {
@@ -173,6 +176,38 @@ class Contenedor {
         fs.writeFileSync(this.route, JSON.stringify(erase));
     }
 
+    updateById(put_producto) {
+        let temp = [];
+        let prod_id = put_producto.id;
+        try {
+            let data = fs.readFileSync(this.route, 'utf-8');
+            temp = JSON.parse(data);
+        } catch (err) {
+        }
+
+
+        let sel = temp.map(elegido => {
+            if (elegido.id === prod_id) {
+                elegido = put_producto;
+            }
+            return elegido;
+        })
+
+
+
+
+        fs.writeFileSync(this.route, JSON.stringify(sel));
+    }
+
+
 }
 
 let productos = new Contenedor('./productos.json');
+let prod1 = {nombre: 'taza', price: 10, thumbnail: 'img1.png'};
+let prod2 = {nombre: 'vaso', price: 20, thumbnail: 'img2.png'};
+let prod3 = {nombre: 'plato', price: 30, thumbnail: 'img3.png'};
+
+productos.save(prod1)
+productos.save(prod2)
+productos.save(prod3)
+
